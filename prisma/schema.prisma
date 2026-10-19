@@ -1,0 +1,52 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  SELLER
+  ADMIN
+}
+
+enum ListingStatus {
+  PENDING
+  READY_TO_SELL
+  INACTIVE
+  SOLD
+  REJECTED
+}
+
+model User {
+  id           String          @id @default(cuid())
+  name         String
+  email        String          @unique
+  passwordHash String
+  whatsapp     String?
+  role         UserRole        @default(USER)
+  listings     VehicleListing[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model VehicleListing {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  price       Decimal       @db.Decimal(12, 2)
+  city        String
+  categorySlug String
+  status      ListingStatus @default(PENDING)
+  sellerId    String
+  seller      User          @relation(fields: [sellerId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, categorySlug])
+  @@index([sellerId])
+}
